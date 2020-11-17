@@ -1,0 +1,2 @@
+class DBConfigurationError(Exception):
+    pass
