@@ -34,7 +34,7 @@ async def registry(request):
 
 @app.route('/user/auth', {'POST'})
 async def auth(request):
-    err = 'username and password are required fields'
+    msg = 'username and password are required fields'
     username, password = get_request_data(request.json, ('username', 'password'))
 
     if all((username, password)):
@@ -47,12 +47,16 @@ async def auth(request):
                 token = token.decode()
                 return response.json({'user_id': user.pk, 'token': token})
 
-        err = 'username or password are incorrect'
-    return response.json({'msg': err}, status=HTTPStatus.BAD_REQUEST)
+        msg = 'username or password are incorrect'
+    return response.json({'msg': msg}, status=HTTPStatus.BAD_REQUEST)
 
 
 @app.route('/user/<user_id>', {'GET'})
 async def user_info(_, user_id):
+
+    if not str(user_id).isdigit():
+        return response.json({'msg': 'user_id should be positive integer'}, status=HTTPStatus.BAD_REQUEST)
+
     user = await User.filter(id=user_id).first()
 
     if await user.exists():

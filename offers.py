@@ -15,6 +15,9 @@ app = Sanic("offers")
 async def create_offer(request):
     user_id, title, text = get_request_data(request.json, ('user_id', 'title', 'text'))
 
+    if not str(user_id).isdigit():
+        return response.json({'msg': 'user_id should be positive integer'})
+
     if all((user_id, title, text)):
         try:
             await Offer.create(user_id=user_id, title=title, text=text)
@@ -28,21 +31,23 @@ async def create_offer(request):
 
 @app.route('/offer', {'POST'})
 async def get_offer(request):
+    error, offers = None, None
     user_id, offer_id = get_request_data(request.json, ('user_id', 'offer_id'))
 
     if all((user_id, offer_id)) or not any((user_id, offer_id)):
-        return response.json(
-            {'msg': 'you should set user_id or offer_id'},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    elif user_id:
-        offers = await Offer.filter(user_id=user_id).values('id', 'title')
-    elif offer_id:
-        offers = await Offer.filter(id=offer_id).values('id', 'title', 'text')
-    else:
-        return response.json({'msg': 'something went wrong'}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        error = {'msg': 'you should set user_id or offer_id'}
 
-    return response.json(offers)
+    elif user_id and str(user_id).isdigit():
+        offers = await Offer.filter(user_id=user_id).values('id', 'title')
+
+    elif offer_id and str(offer_id).isdigit():
+        offers = await Offer.filter(id=offer_id).values('id', 'title', 'text')
+
+    else:
+        error = {'msg': 'user_id and offer_id should be positive integer'}
+
+    result, status_code = (offers, HTTPStatus.OK) if not error else (error, HTTPStatus.BAD_REQUEST)
+    return response.json(result, status_code)
 
 
 if __name__ == '__main__':
