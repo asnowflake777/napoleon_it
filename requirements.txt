@@ -14,6 +14,8 @@ PyPika==0.44.0
 pytz==2020.4
 rfc3986==1.4.0
 sanic==20.9.1
+Sanic-Cors==0.10.0.post3
+Sanic-Plugins-Framework==0.9.4.post1
 scrypt==0.8.17
 sniffio==1.2.0
 tortoise-orm==0.16.18

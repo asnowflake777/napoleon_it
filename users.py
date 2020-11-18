@@ -2,18 +2,20 @@ import jwt
 
 from http import HTTPStatus
 from sanic import Sanic, response
+from sanic_cors import CORS
 from tortoise.exceptions import IntegrityError
 
 from db.models import User, Offer
 from db.utils import connect_to_db
 from utils import get_request_data, encrypt_password
-from settings import USER_APP_IP, USER_APP_PORT, SALT
+from settings import USER_APP_HOST, USER_APP_PORT, SALT
 
 
 app = Sanic("users")
+CORS(app)
 
 
-@app.route('/user/registry', {'POST'})
+@app.route('/user/registry', {'OPTIONS', 'POST'})
 async def registry(request):
     username, password, email = get_request_data(request.json, ('username', 'password', 'email'))
 
@@ -24,7 +26,10 @@ async def registry(request):
             return response.HTTPResponse(status=HTTPStatus.CREATED)
 
         except IntegrityError:
-            return response.json({'msg': 'user with this email already registered'})
+            return response.json(
+                {'msg': 'user with this email or username already registered'},
+                status=HTTPStatus.BAD_REQUEST
+            )
     else:
         return response.json(
             {'msg': 'username, password and email are required fields'},
@@ -32,7 +37,7 @@ async def registry(request):
         )
 
 
-@app.route('/user/auth', {'POST'})
+@app.route('/user/auth', {'OPTIONS', 'POST'})
 async def auth(request):
     msg = 'username and password are required fields'
     username, password = get_request_data(request.json, ('username', 'password'))
@@ -51,7 +56,7 @@ async def auth(request):
     return response.json({'msg': msg}, status=HTTPStatus.BAD_REQUEST)
 
 
-@app.route('/user/<user_id>', {'GET'})
+@app.route('/user/<user_id>', {'OPTIONS', 'GET'})
 async def user_info(_, user_id):
 
     if not str(user_id).isdigit():
@@ -68,4 +73,4 @@ async def user_info(_, user_id):
 
 if __name__ == '__main__':
     connect_to_db(app)
-    app.run(host=USER_APP_IP, port=USER_APP_PORT)
+    app.run(host=USER_APP_HOST, port=USER_APP_PORT)

@@ -1,0 +1,191 @@
+openapi: 3.0.0
+
+info:
+  title: Test Task Api
+  version: 0.1.3
+
+paths:
+
+  /user/registry:
+    post:
+      description: Creates a user
+      servers:
+        - url: http://localhost:5001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserData'
+      responses:
+        '201':
+          description: Created
+
+  /user/auth:
+    post:
+      description: Authenticates a user
+      servers:
+        - url: http://localhost:5001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuthData'
+      responses:
+        '200':
+          description: Json dict with user's info and user's offers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAuthResponse'
+
+  /offer/create:
+    post:
+      description: Creates a offer
+      servers:
+        - url: http://localhost:5002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewOfferData'
+      responses:
+        '201':
+          description: Created
+
+  /user/{userID}:
+    get:
+      description: Returns a user by ID
+      servers:
+        - url: http://localhost:5001
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+
+  /offer:
+    post:
+      description: Gets current offer or user's offers
+      servers:
+        - url: http://localhost:5002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              oneOf:
+                - $ref: '#/components/schemas/UserID'
+                - $ref: '#/components/schemas/OfferID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/OffersList'
+                  - $ref: '#/components/schemas/Offer'
+
+
+components:
+  schemas:
+
+    NewUserData:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+      required:
+        - username
+        - password
+        - email
+
+    UserAuthData:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    UserAuthResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        token:
+          type: string
+
+    UserID:
+      type: object
+      properties:
+        user_id:
+          type: integer
+      required:
+        - user_id
+
+    OfferID:
+      type: object
+      properties:
+        offer_id:
+          type: integer
+      required:
+        - offer_id
+
+    NewOfferData:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        title:
+          type: string
+        text:
+          type: string
+
+    Offer:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        text:
+          type: string
+
+    OffersList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Offer'
+
+
+    UserInfo:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        username:
+          type: string
+        offers:
+          type: array
+          items:
+            $ref: '#/components/schemas/OffersList'

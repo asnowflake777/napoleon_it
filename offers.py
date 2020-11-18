@@ -1,17 +1,19 @@
 from http import HTTPStatus
 from sanic import Sanic, response
+from sanic_cors import CORS
 from tortoise.exceptions import IntegrityError
 
 from db.models import Offer
 from db.utils import connect_to_db
 from utils import get_request_data
-from settings import OFFERS_APP_IP, OFFERS_APP_PORT
+from settings import OFFERS_APP_HOST, OFFERS_APP_PORT
 
 
 app = Sanic("offers")
+CORS(app)
 
 
-@app.route('/offer/create', {'POST'})
+@app.route('/offer/create', {'OPTIONS', 'POST'})
 async def create_offer(request):
     user_id, title, text = get_request_data(request.json, ('user_id', 'title', 'text'))
 
@@ -29,7 +31,7 @@ async def create_offer(request):
     return response.HTTPResponse(status=HTTPStatus.NO_CONTENT)
 
 
-@app.route('/offer', {'POST'})
+@app.route('/offer', {'OPTIONS', 'POST'})
 async def get_offer(request):
     error, offers = None, None
     user_id, offer_id = get_request_data(request.json, ('user_id', 'offer_id'))
@@ -42,6 +44,7 @@ async def get_offer(request):
 
     elif offer_id and str(offer_id).isdigit():
         offers = await Offer.filter(id=offer_id).values('id', 'title', 'text')
+        offers = offers.pop() if offers else {}
 
     else:
         error = {'msg': 'user_id and offer_id should be positive integer'}
@@ -52,4 +55,4 @@ async def get_offer(request):
 
 if __name__ == '__main__':
     connect_to_db(app)
-    app.run(host=OFFERS_APP_IP, port=OFFERS_APP_PORT)
+    app.run(host=OFFERS_APP_HOST, port=OFFERS_APP_PORT)
