@@ -1,4 +1,4 @@
-from tortoise import Tortoise
+from tortoise import Tortoise, run_async
 from tortoise.contrib.sanic import register_tortoise
 
 from settings import DB_CONFIG
@@ -37,3 +37,8 @@ def connect_to_db(app):
         modules=models,
         generate_schemas=True
     )
+
+
+def create_tables():
+    """Функция котороая создает таблицы согласно классам в models.py"""
+    run_async(generate_schemas())
