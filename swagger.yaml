@@ -175,8 +175,12 @@ components:
     OffersList:
       type: array
       items:
-        $ref: '#/components/schemas/Offer'
-
+        type: object
+        properties:
+          id:
+            type: integer
+          title:
+            type: string
 
     UserInfo:
       type: object
